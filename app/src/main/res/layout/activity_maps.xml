@@ -1,0 +1,43 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_height="match_parent"
+              android:layout_width="match_parent"
+              android:orientation="vertical">
+    <fragment android:layout_width="match_parent"
+                 android:layout_height="0dp"
+                 android:id="@+id/map"
+                 android:name="com.google.android.gms.maps.SupportMapFragment"
+                 android:layout_weight="99"
+                 tools:context="com.denis.ubiq.MapActivity">
+    </fragment>
+    <LinearLayout android:orientation="horizontal"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:gravity="center_vertical"
+                  android:paddingLeft="5dp"
+                  android:paddingRight="5dp">
+        <Switch android:id="@+id/toggleTracking"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="2dp"
+                android:splitTrack="false"
+                android:textOn="@string/stop_updates"
+                android:textOff="@string/start_updates"
+                android:checked="false"
+                tools:checked="false"
+                android:text="@string/stop_updates" />
+        <Space android:layout_width="232dp"
+               android:layout_height="wrap_content" />
+        <ImageButton android:src="@android:drawable/ic_menu_mylocation"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:id="@+id/imageButton"
+                     android:contentDescription="@string/center_screen"
+                     android:elevation="0dp"
+                     android:onClick="moveToPosition"
+                     style="@android:style/Widget.DeviceDefault.ImageButton"
+        />
+    </LinearLayout>
+</LinearLayout>
