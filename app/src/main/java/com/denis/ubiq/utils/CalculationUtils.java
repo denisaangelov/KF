@@ -60,7 +60,5 @@ public class CalculationUtils {
         return new LatLng( Math.toDegrees( lat2 ), Math.toDegrees( lng2 ) );
     }
 
-    public static long nano2milli( long nano ) {return ( long ) ( nano / 1e6 );}
-
     public static int hertz2periodUs( double hz ) { return ( int ) ( 1.0e6 / ( 1.0 / hz ) );}
 }

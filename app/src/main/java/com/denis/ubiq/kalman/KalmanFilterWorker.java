@@ -16,10 +16,9 @@ import android.util.*;
 
 import com.denis.ubiq.MapActivity;
 import com.denis.ubiq.items.*;
-import com.denis.ubiq.utils.Constants;
+import com.denis.ubiq.listeners.*;
 import com.google.android.gms.location.*;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import static android.content.Context.*;
 import static android.hardware.Sensor.*;
@@ -33,16 +32,17 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
 
     private static String TAG = "KalmanFilterWorker";
     private static int DELAY = 500;
+
     private final AtomicBoolean running = new AtomicBoolean( false );
     private final MapActivity mapActivity;
-    public KalmanFilterModel kalmanFilterModel;
-    private Thread worker;
-    private SettingsClient settingsClient;
-    private LocationManager locationManager;
+    private final SettingsClient settingsClient;
+    private final LocationManager locationManager;
+    private final SensorManager sensorManager;
+
+    private KalmanFilterModel kalmanFilterModel;
     private LocationRequest locationRequest;
     private LocationSettingsRequest locationSettingsRequest;
 
-    private SensorManager sensorManager;
     private float[] linearAcceleration = new float[4];
     private float[] rotationMatrix = new float[16];
     private float[] rotationMatrixInv = new float[16];
@@ -50,6 +50,11 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     private float magneticDeclination = 0.0F;
 
     private Queue<TimestampItem> sensorFusionItems = new PriorityQueue<>();
+
+    public KalmanFilterWorker( MapActivity mapActivity, Location location ) {
+        this( mapActivity );
+        this.kalmanFilterModel = new KalmanFilterModel( location );
+    }
 
     public KalmanFilterWorker( MapActivity mapActivity ) {
         this.mapActivity = mapActivity;
@@ -66,7 +71,7 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     }
 
     private void buildLocationRequest() {
-        locationRequest = new LocationRequest();
+        this.locationRequest = new LocationRequest();
         locationRequest.setInterval( UPDATE_INTERVAL );
         locationRequest.setFastestInterval( FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS );
         locationRequest.setPriority( LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY );
@@ -77,12 +82,13 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     }
 
     public void begin() {
-        settingsClient.checkLocationSettings( locationSettingsRequest ).addOnSuccessListener( mapActivity, new LocationOnSuccessListener( this ) );
+        settingsClient.checkLocationSettings( locationSettingsRequest )
+                      .addOnSuccessListener( mapActivity, new LocationOnSuccessListener( this ) )
+                      .addOnFailureListener( mapActivity, new LocationOnFailureListener( mapActivity ) );
     }
 
     public void start() {
-        worker = new Thread( this );
-        worker.start();
+        new Thread( this ).start();
 
         requestLocationUpdates();
         registerSensorListeners();
@@ -121,19 +127,15 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
 
                     double[] predictedPosition = kalmanFilterModel.predict( ( ( SensorItem ) item ) );
 
-                    double positionX = predictedPosition[0];
-                    double positionY = predictedPosition[1];
-                    double velocityX = predictedPosition[2];
-                    double velocityY = predictedPosition[3];
-                    LatLng position = metersToLatLng( positionX, positionY );
+                    LatLng position = metersToLatLng( predictedPosition[0], predictedPosition[1] );
                     Log.i( TAG,
                            String.format( "%s, %d, KalmanPredict: PositionX=%s PositionY=%s; VelocityX=%s VelocityY=%s",
                                           getCurrentTime(),
                                           item.timestamp,
                                           position.latitude,
                                           position.longitude,
-                                          velocityX,
-                                          velocityY ) );
+                                          predictedPosition[2],
+                                          predictedPosition[3] ) );
                 } else {
                     kalmanFilterModel.updateMeasurementModel( ( GpsItem ) item );
                     double[] stateEstimation = kalmanFilterModel.correct( ( GpsItem ) item );
@@ -166,13 +168,11 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     }
 
     private Location getEstimatedLocation( double[] stateEstimation ) {
-        double positionX = stateEstimation[0];
-        double positionY = stateEstimation[1];
         double velocityX = stateEstimation[2];
         double velocityY = stateEstimation[3];
         long duration = elapsedRealtimeNanos();
 
-        LatLng position = metersToLatLng( positionX, positionY );
+        LatLng position = metersToLatLng( stateEstimation[0], stateEstimation[1] );
 
         Location location = new Location( TAG );
         location.setLatitude( position.latitude );
@@ -278,21 +278,5 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     @Override
     public void onProviderDisabled( String provider ) {
 
-    }
-
-    private class LocationOnSuccessListener implements OnSuccessListener<LocationSettingsResponse> {
-
-        private final KalmanFilterWorker kalmanFilterWorker;
-
-        LocationOnSuccessListener( KalmanFilterWorker mapActivity ) {
-            this.kalmanFilterWorker = mapActivity;
-        }
-
-        @Override
-        @SuppressWarnings( "MissingPermission" )
-        public void onSuccess( LocationSettingsResponse locationSettingsResponse ) {
-            kalmanFilterWorker.start();
-            Log.i( Constants.TAG, "All location settings are satisfied." );
-        }
     }
 }

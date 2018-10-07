@@ -11,7 +11,7 @@ import android.util.*;
 import android.view.*;
 import android.widget.*;
 
-import com.denis.ubiq.kalman.*;
+import com.denis.ubiq.kalman.KalmanFilterWorker;
 import com.denis.ubiq.listeners.*;
 import com.google.android.gms.location.*;
 import com.google.android.gms.maps.*;
@@ -28,16 +28,18 @@ import static com.denis.ubiq.utils.Constants.*;
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback, SensorEventListener {
 
     private static Marker navigationMarker;
+    private static LatLng currentPosition;
+
     public Handler handler;
+
     private SettingsClient settingsClient;
     private LocationRequest locationRequest;
     private LocationSettingsRequest locationSettingsRequest;
     private LocationManager locationManager;
     private SensorManager sensorManager;
     private GoogleMap map;
-    private Location currentLocation;
-    private Location filteredLocation;
     private KalmanFilterWorker worker;
+
     private float[] acceleration = new float[4];
     private float[] magneticField = new float[4];
     private float[] orientationRotationMatrix = new float[9];
@@ -93,15 +95,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         super.onStart();
     }
 
-    public void registerSensorListeners() {
-        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_ACCELEROMETER ), SENSOR_DELAY_NORMAL );
-        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_MAGNETIC_FIELD ), SENSOR_DELAY_NORMAL );
-    }
-
     @Override
     public void onMapReady( GoogleMap googleMap ) {
         map = googleMap;
-        settingsClient.checkLocationSettings( locationSettingsRequest ).addOnSuccessListener( this, new SingleUpdateOnSuccessListener( this ) );
+        settingsClient.checkLocationSettings( locationSettingsRequest )
+                      .addOnSuccessListener( this, new SingleUpdateOnSuccessListener( this ) )
+                      .addOnFailureListener( this, new LocationOnFailureListener( this ) );
         handler = new MapHandler( map );
     }
 
@@ -145,28 +144,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         worker.stop();
     }
 
-    public void addMarker( Location location ) {
-        if( map != null ) {
-            navigationMarker = map.addMarker( markerOptions.position( new LatLng( location.getLatitude(), location.getLongitude() ) ) );
-        }
-    }
-
     public void moveToPosition( View view ) {
-        if( currentLocation != null ) {
-            moveToPosition( new LatLng( currentLocation.getLatitude(), currentLocation.getLongitude() ) );
+        if( currentPosition != null ) {
+            moveToPosition( currentPosition );
         }
     }
 
-    public void moveToPosition( LatLng latLng ) {
+    private void moveToPosition( LatLng latLng ) {
         if( map != null ) {
-            map.animateCamera( CameraUpdateFactory.newLatLngZoom( latLng, 15 ) );
-        }
-    }
-
-    public void initKalmanFilterModel( Location location ) {
-        if( worker == null ) {
-            worker = new KalmanFilterWorker( this );
-            worker.kalmanFilterModel = new KalmanFilterModel( location );
+            map.animateCamera( CameraUpdateFactory.newLatLngZoom( latLng, 10 ) );
         }
     }
 
@@ -198,6 +184,30 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     }
 
+    public void onSingleUpdateLocationSuccess( Location location ) {
+        registerSensorListeners();
+        addMarker( location );
+        moveToPosition( new LatLng( location.getLatitude(), location.getLongitude() ) );
+        initKalmanFilterModel( location );
+    }
+
+    private void registerSensorListeners() {
+        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_ACCELEROMETER ), SENSOR_DELAY_NORMAL );
+        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_MAGNETIC_FIELD ), SENSOR_DELAY_NORMAL );
+    }
+
+    private void addMarker( Location location ) {
+        if( map != null ) {
+            navigationMarker = map.addMarker( markerOptions.position( new LatLng( location.getLatitude(), location.getLongitude() ) ) );
+        }
+    }
+
+    private void initKalmanFilterModel( Location location ) {
+        if( worker == null ) {
+            worker = new KalmanFilterWorker( this, location );
+        }
+    }
+
     private static class MapHandler extends Handler {
 
         GoogleMap map;
@@ -218,17 +228,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             LatLng estimatedPosition = ( LatLng ) ( ( Pair ) msg.obj ).second;
             map.addCircle( redCircleOptions.center( estimatedPosition ) );
             navigationMarker.setPosition( estimatedPosition );
+            currentPosition = estimatedPosition;
         }
 
         private LatLng getNoisyPosition( LatLng position ) {
-            double latitude = position.latitude + ( ThreadLocalRandom.current().nextDouble( 0.00002, 0.0002 ) * ( new Random().nextBoolean()
+            double latitude = position.latitude + ThreadLocalRandom.current().nextDouble( 0.00002, 0.0002 ) * ( new Random().nextBoolean() ? -1 : 1 );
+            double longitude = position.longitude + ThreadLocalRandom.current().nextDouble( 0.00002, 0.0002 ) * ( new Random().nextBoolean()
                                                                                                                   ? -1
-                                                                                                                  : 1 ) );
-            double longitude = position.longitude + ( ThreadLocalRandom.current().nextDouble( 0.00002, 0.0002 ) * ( new Random().nextBoolean()
-                                                                                                                    ? -1
-                                                                                                                    : 1 ) );
+                                                                                                                  : 1 );
             return new LatLng( latitude, longitude );
         }
     }
-
 }

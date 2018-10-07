@@ -3,7 +3,6 @@ package com.denis.ubiq.kalman;
 import android.location.Location;
 import org.apache.commons.math3.filter.*;
 import org.apache.commons.math3.linear.*;
-import org.apache.commons.math3.random.*;
 
 import com.denis.ubiq.items.*;
 
@@ -50,12 +49,7 @@ public class KalmanFilterModel {
 
     private KalmanFilter filter;
 
-    private RandomGenerator rand = new JDKRandomGenerator();
-    private RealVector tmpPNoise = new ArrayRealVector( new double[] { Math.pow( dt, 2d ) / 2d, dt, 0, 0 } );
-    private RealVector mNoise = new ArrayRealVector( 2 );
-
     private long lastPredictTimeStamp;
-    private long steps;
     private DefaultProcessModel processModel;
     private DefaultMeasurementModel measurementModel;
 

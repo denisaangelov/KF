@@ -4,7 +4,6 @@ import android.location.*;
 import android.os.Bundle;
 
 import com.denis.ubiq.MapActivity;
-import com.google.android.gms.maps.model.LatLng;
 
 public class SingleUpdateLocationListener implements LocationListener {
 
@@ -15,10 +14,7 @@ public class SingleUpdateLocationListener implements LocationListener {
     }
 
     public void onLocationChanged( Location location ) {
-        mapActivity.registerSensorListeners();
-        mapActivity.addMarker( location );
-        mapActivity.moveToPosition( new LatLng( location.getLatitude(), location.getLongitude() ) );
-        mapActivity.initKalmanFilterModel( location );
+        mapActivity.onSingleUpdateLocationSuccess( location );
     }
 
     public void onStatusChanged( String provider, int status, Bundle extras ) { }
