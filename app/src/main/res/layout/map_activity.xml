@@ -1,0 +1,50 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_height="match_parent"
+              android:layout_width="match_parent"
+              android:orientation="vertical">
+    <android.support.v7.widget.Toolbar android:id="@+id/toolbar"
+                                       android:layout_height="wrap_content"
+                                       android:layout_width="match_parent"
+                                       android:background="@android:color/holo_green_light"
+                                       app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+    />
+    <fragment android:id="@+id/map"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:name="com.google.android.gms.maps.MapFragment"
+              android:layout_weight="99"
+              tools:context="com.denis.ubiq.MapActivity">
+    </fragment>
+    <LinearLayout android:orientation="horizontal"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:paddingLeft="8dp"
+                  android:paddingRight="8dp"
+                  android:background="@android:color/holo_green_light"
+                  android:gravity="center_vertical|fill_horizontal">
+        <Switch android:id="@+id/toggleBtn"
+                android:layout_height="wrap_content"
+                android:splitTrack="false"
+                android:textOn="@string/stop_updates"
+                android:textOff="@string/start_updates"
+                android:checked="false"
+                android:text="@string/start_updates"
+                android:layout_width="wrap_content"
+                tools:checked="false" />
+        <Space android:layout_height="wrap_content"
+               android:layout_width="0dp"
+               android:layout_weight="1" />
+        <ImageButton android:id="@+id/positionBtn"
+                     android:src="@android:drawable/ic_menu_compass"
+                     android:layout_height="wrap_content"
+                     android:contentDescription="@string/center_screen"
+                     android:onClick="moveToPosition"
+                     android:layout_width="50dp"
+                     android:scaleType="fitCenter"
+                     android:tint="@android:color/background_dark"
+                     style="@android:style/Widget.DeviceDefault.Light.ImageButton" />
+    </LinearLayout>
+</LinearLayout>

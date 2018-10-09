@@ -64,7 +64,7 @@
                                                       });*/
 
  		// x = [ 0 0 0 0] state consists of position and velocity[pX, pY, vX, vY]
- 		//TODO: inititate with map center?
+ 		//TODO: initiate with map center?
  		x = new ArrayRealVector(new double[]{ 0, 0, 0, 0 });
 
  		ProcessModel pm = new DefaultProcessModel(A, B, Q, x, PO);

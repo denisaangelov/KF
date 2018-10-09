@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <item android:id="@+id/form1"
+          android:title="@string/clear"
+          android:onClick="clear" />
+    <item android:title="@string/rate">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/one"
+                    android:title="@string/_1s"
+                    android:onClick="setRate"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/three"
+                    android:title="@string/_3s"
+                    android:onClick="setRate"
+                    app:showAsAction="never"
+                    android:checked="true" />
+                <item
+                    android:id="@+id/five"
+                    android:title="@string/_5s"
+                    android:onClick="setRate"
+                    app:showAsAction="never"
+                    android:checked="false" />
+            </group>
+        </menu>
+    </item>
+    <item android:title="@string/polylines">
+        <menu>
+            <group android:checkableBehavior="all">
+                <item
+                    android:id="@+id/kalman_poly"
+                    android:title="@string/kalman"
+                    android:onClick="addPolyline"
+                    android:checked="false"
+                    android:checkable="true"
+                    android:orderInCategory="1"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/gps_poly"
+                    android:title="@string/gps"
+                    android:onClick="addPolyline"
+                    android:checked="false"
+                    android:orderInCategory="2"
+                    android:checkable="true"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/noisy_poly"
+                    android:title="@string/noisy"
+                    android:onClick="addPolyline"
+                    android:checked="false"
+                    android:checkable="true"
+                    android:orderInCategory="3"
+                    app:showAsAction="never" />
+            </group>
+        </menu>
+    </item>
+    <item android:title="@string/visibility">
+        <menu>
+            <group android:checkableBehavior="all">
+                <item
+                    android:id="@+id/kalman"
+                    android:title="@string/kalman"
+                    android:onClick="showHideMarker"
+                    android:checked="true"
+                    android:checkable="true"
+                    android:orderInCategory="1"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/gps"
+                    android:title="@string/gps"
+                    android:onClick="showHideMarker"
+                    android:checked="true"
+                    android:checkable="true"
+                    android:orderInCategory="2"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/noisy"
+                    android:title="@string/noisy"
+                    android:onClick="showHideMarker"
+                    android:checked="true"
+                    android:checkable="true"
+                    android:orderInCategory="3"
+                    app:showAsAction="never" />
+            </group>
+        </menu>
+    </item>
+
+</menu>

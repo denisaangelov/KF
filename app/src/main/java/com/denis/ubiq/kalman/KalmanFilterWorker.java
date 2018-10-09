@@ -1,6 +1,5 @@
 package com.denis.ubiq.kalman;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,11 +32,13 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     private static String TAG = "KalmanFilterWorker";
     private static int DELAY = 500;
 
-    private final AtomicBoolean running = new AtomicBoolean( false );
+    public final AtomicBoolean isRunning = new AtomicBoolean( false );
     private final MapActivity mapActivity;
     private final SettingsClient settingsClient;
     private final LocationManager locationManager;
     private final SensorManager sensorManager;
+    public int rate;
+    private long stepCounter = 1;
 
     private KalmanFilterModel kalmanFilterModel;
     private LocationRequest locationRequest;
@@ -50,10 +51,12 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     private float magneticDeclination = 0.0F;
 
     private Queue<TimestampItem> sensorFusionItems = new PriorityQueue<>();
+    private long predictionStep = 5;
 
-    public KalmanFilterWorker( MapActivity mapActivity, Location location ) {
+    public KalmanFilterWorker( MapActivity mapActivity, Location location, int rate ) {
         this( mapActivity );
         this.kalmanFilterModel = new KalmanFilterModel( location );
+        this.rate = rate;
     }
 
     public KalmanFilterWorker( MapActivity mapActivity ) {
@@ -73,7 +76,7 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     private void buildLocationRequest() {
         this.locationRequest = new LocationRequest();
         locationRequest.setInterval( UPDATE_INTERVAL );
-        locationRequest.setFastestInterval( FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS );
+        locationRequest.setFastestInterval( FASTEST_UPDATE_INTERVAL );
         locationRequest.setPriority( LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY );
     }
 
@@ -105,14 +108,14 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     }
 
     private void registerSensorListeners() {
-        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_LINEAR_ACCELERATION ), hertz2periodUs( 10 ) );
-        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_ROTATION_VECTOR ), hertz2periodUs( 10 ) );
+        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_LINEAR_ACCELERATION ), hertz2periodUs( Hz ) );
+        sensorManager.registerListener( this, sensorManager.getDefaultSensor( TYPE_ROTATION_VECTOR ), hertz2periodUs( Hz ) );
     }
 
     @Override
     public void run() {
-        running.set( true );
-        while( running.get() ) {
+        isRunning.set( true );
+        while( isRunning.get() ) {
             try {
                 Thread.sleep( DELAY );
             } catch( InterruptedException e ) {
@@ -128,10 +131,21 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
                     double[] predictedPosition = kalmanFilterModel.predict( ( ( SensorItem ) item ) );
 
                     LatLng position = metersToLatLng( predictedPosition[0], predictedPosition[1] );
+                    String kalmanString;
+                    if( ++stepCounter > predictionStep ) {
+                        Message message = Message.obtain();
+                        message.obj = new Pair<>( null, position );
+                        mapActivity.handler.sendMessage( message );
+                        kalmanString = "KalmanForetell";
+                    } else {
+                        kalmanString = "KalmanPredict";
+                    }
+
                     Log.i( TAG,
-                           String.format( "%s, %d, KalmanPredict: PositionX=%s PositionY=%s; VelocityX=%s VelocityY=%s",
+                           String.format( "%s, %s, %s: PositionX=%s PositionY=%s; VelocityX=%s VelocityY=%s",
                                           getCurrentTime(),
                                           item.timestamp,
+                                          kalmanString,
                                           position.latitude,
                                           position.longitude,
                                           predictedPosition[2],
@@ -139,32 +153,28 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
                 } else {
                     kalmanFilterModel.updateMeasurementModel( ( GpsItem ) item );
                     double[] stateEstimation = kalmanFilterModel.correct( ( GpsItem ) item );
-                    Location estimatedLocation = getEstimatedLocation( stateEstimation );
 
-                    Log.i( TAG,
-                           String.format( "%s, %d, KalmanUpdate: latitude=%s; longitude=%s; accuracy=%s; speed=%s; bearing=%s",
-                                          getCurrentTime(),
-                                          NANOSECONDS.toMillis( estimatedLocation.getElapsedRealtimeNanos() ),
-                                          estimatedLocation.getLatitude(),
-                                          estimatedLocation.getLongitude(),
-                                          estimatedLocation.getAccuracy(),
-                                          estimatedLocation.getSpeed(),
-                                          estimatedLocation.getBearing() ) );
-
-                    LatLng measuredPosition = new LatLng( ( ( GpsItem ) item ).latitude, ( ( GpsItem ) item ).longitude );
-                    LatLng estimatedPosition = new LatLng( estimatedLocation.getLatitude(), estimatedLocation.getLongitude() );
-                    Message message = Message.obtain();
-                    message.obj = new Pair<>( measuredPosition, estimatedPosition );
-                    mapActivity.handler.sendMessage( message );
+                    if( stepCounter >= rate ) {
+                        Location estimatedLocation = getEstimatedLocation( stateEstimation );
+                        Log.i( TAG,
+                               String.format( "%s, %s, KalmanUpdate: latitude=%s; longitude=%s; accuracy=%s; speed=%s; bearing=%s",
+                                              getCurrentTime(),
+                                              NANOSECONDS.toMillis( estimatedLocation.getElapsedRealtimeNanos() ),
+                                              estimatedLocation.getLatitude(),
+                                              estimatedLocation.getLongitude(),
+                                              estimatedLocation.getAccuracy(),
+                                              estimatedLocation.getSpeed(),
+                                              estimatedLocation.getBearing() ) );
+                        LatLng measuredPosition = new LatLng( ( ( GpsItem ) item ).latitude, ( ( GpsItem ) item ).longitude );
+                        LatLng estimatedPosition = new LatLng( estimatedLocation.getLatitude(), estimatedLocation.getLongitude() );
+                        Message message = Message.obtain();
+                        message.obj = new Pair<>( measuredPosition, estimatedPosition );
+                        mapActivity.handler.sendMessage( message );
+                        stepCounter = 0;
+                    }
                 }
             }
         }
-    }
-
-    private String getCurrentTime() {
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat( "HH:mm:ss.SSS" ); //.format( new Date() )
-        return sdf.format( cal.getTime() );
     }
 
     private Location getEstimatedLocation( double[] stateEstimation ) {
@@ -188,12 +198,14 @@ public class KalmanFilterWorker implements SensorEventListener, LocationListener
     }
 
     public void stop() {
-        running.set( false );
+        isRunning.set( false );
+        sensorFusionItems.clear();
+        unregisterListeners();
+    }
 
+    public void unregisterListeners() {
         locationManager.removeUpdates( this );
         sensorManager.unregisterListener( this );
-
-        sensorFusionItems.clear();
     }
 
     @Override

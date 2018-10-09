@@ -1,5 +1,8 @@
 package com.denis.ubiq.utils;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import com.google.android.gms.maps.model.LatLng;
 
 public class CalculationUtils {
@@ -58,6 +61,12 @@ public class CalculationUtils {
         lng2 = ( lng2 + 3.0 * Math.PI ) % ( 2.0 * Math.PI ) - Math.PI;
 
         return new LatLng( Math.toDegrees( lat2 ), Math.toDegrees( lng2 ) );
+    }
+
+    public static String getCurrentTime() {
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat( "HH:mm:ss.SSS" ); //.format( new Date() )
+        return sdf.format( cal.getTime() );
     }
 
     public static int hertz2periodUs( double hz ) { return ( int ) ( 1.0e6 / ( 1.0 / hz ) );}

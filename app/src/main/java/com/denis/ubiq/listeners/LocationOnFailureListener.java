@@ -3,6 +3,7 @@ package com.denis.ubiq.listeners;
 import android.content.IntentSender;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.denis.ubiq.MapActivity;
 import com.denis.ubiq.utils.Constants;
@@ -36,8 +37,7 @@ public class LocationOnFailureListener implements OnFailureListener {
                 break;
             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                 String errorMessage = "Location settings are inadequate, and cannot be " + "fixed here. Fix in Settings.";
-                mapActivity.showToast( errorMessage, LENGTH_LONG );
-
+                Toast.makeText( mapActivity, errorMessage, LENGTH_LONG ).show();
                 Log.e( TAG, errorMessage );
         }
     }
