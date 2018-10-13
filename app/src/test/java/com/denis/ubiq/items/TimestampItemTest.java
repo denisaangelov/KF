@@ -10,9 +10,9 @@ public class TimestampItemTest {
 
     @Test
     public void priorityQueueTest() {
-        SensorItem sensorItem1 = new SensorItem( 0.0D, 0.0D, 1 );
-        SensorItem sensorItem2 = new SensorItem( 0.0D, 0.0D, 3 );
-        SensorItem sensorItem3 = new SensorItem( 0.0D, 0.0D, 6 );
+        SensorItem sensorItem1 = new SensorItem( 0.0D, 0.0D, 0.0F, 1 );
+        SensorItem sensorItem2 = new SensorItem( 0.0D, 0.0D, 0.0F, 3 );
+        SensorItem sensorItem3 = new SensorItem( 0.0D, 0.0D, 0.0F, 6 );
         GpsItem gpsItem1 = new GpsItem( 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 2 );
         GpsItem gpsItem2 = new GpsItem( 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 4 );
         GpsItem gpsItem3 = new GpsItem( 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 5 );

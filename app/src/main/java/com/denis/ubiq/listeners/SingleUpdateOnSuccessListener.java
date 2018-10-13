@@ -20,7 +20,6 @@ public class SingleUpdateOnSuccessListener implements OnSuccessListener<Location
     @SuppressWarnings( "MissingPermission" )
     public void onSuccess( LocationSettingsResponse locationSettingsResponse ) {
         mapActivity.requestSingleUpdate();
-
         Log.i( TAG, "All location settings are satisfied." );
     }
 }

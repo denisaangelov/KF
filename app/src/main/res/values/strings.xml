@@ -23,10 +23,10 @@
     <string name="_1s">1s</string>
     <string name="_3s">3s</string>
     <string name="_5s">5s</string>
+    <string name="_10s">10s</string>
     <string name="rate">Rate</string>
     <string name="polylines">Polylines</string>
     <string name="visibility">Visibility</string>
     <string name="kalman">Kalman</string>
     <string name="gps">GPS</string>
-    <string name="noisy">Noisy</string>
 </resources>

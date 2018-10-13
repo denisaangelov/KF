@@ -16,24 +16,23 @@ public final class Constants {
     public static final int Hz = 10;
 
     public static CircleOptions greenCircleOptions = new CircleOptions().clickable( true )
-                                                                        .radius( 8 )
+                                                                        .radius( 7 )
                                                                         .fillColor( GREEN )
                                                                         .strokeWidth( 1 )
                                                                         .strokeColor( BLACK );
     public static CircleOptions blueCircleOptions = new CircleOptions().clickable( true )
-                                                                       .radius( 8 )
-                                                                       .fillColor( BLUE )
+                                                                       .radius( 7 )
+                                                                       .fillColor( GREEN )
                                                                        .strokeWidth( 1 )
-                                                                       .strokeColor( BLACK );
+                                                                       .strokeColor( RED );
     public static CircleOptions redCircleOptions = new CircleOptions().clickable( true )
-                                                                      .radius( 8 )
+                                                                      .radius( 7 )
                                                                       .fillColor( RED )
                                                                       .strokeWidth( 1 )
                                                                       .strokeColor( BLACK );
 
-    public static PolylineOptions greenPolylineOptions = new PolylineOptions().clickable( true ).color( GREEN ).width( 8F ).geodesic( true );
-    public static PolylineOptions bluePolylineOptions = new PolylineOptions().clickable( true ).color( BLUE ).width( 8F ).geodesic( true );
-    public static PolylineOptions redPolylineOptions = new PolylineOptions().clickable( true ).color( RED ).width( 8F ).geodesic( true );
+    public static PolylineOptions greenPolylineOptions = new PolylineOptions().clickable( true ).color( GREEN ).width( 7F ).geodesic( true );
+    public static PolylineOptions redPolylineOptions = new PolylineOptions().clickable( true ).color( RED ).width( 7F ).geodesic( true );
 
     public static MarkerOptions markerOptions = new MarkerOptions().icon( BitmapDescriptorFactory.fromResource( R.drawable.ic_navigation ) )
                                                                    .title( "Marker" );
